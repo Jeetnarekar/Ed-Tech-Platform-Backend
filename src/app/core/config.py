@@ -62,6 +62,15 @@ class Settings(BaseSettings):
                 v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
             elif v.startswith("postgres://"):
                 v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+            
+            # Remove sslmode and channel_binding since asyncpg does not support them
+            from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+            parsed = urlparse(v)
+            query_params = parse_qs(parsed.query)
+            query_params.pop("sslmode", None)
+            query_params.pop("channel_binding", None)
+            new_query = urlencode(query_params, doseq=True)
+            v = urlunparse(parsed._replace(query=new_query))
             return v
         data = info.data
         user = data.get("POSTGRES_USER")
