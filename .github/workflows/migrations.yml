@@ -1,0 +1,33 @@
+name: Database Migrations
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  migrate:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    env:
+      # Use the unpooled database connection string for migrations to prevent PgBouncer/transaction conflicts
+      DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+      # satisfy configuration validation
+      REDIS_HOST: mock-redis-host
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Alembic Migrations
+        run: |
+          alembic upgrade head
